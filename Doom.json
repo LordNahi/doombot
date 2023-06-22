@@ -1,0 +1,10 @@
+{
+  "name": "Doom",
+  "version": "1.0",
+  "authors": ["Nathan Nahi"],
+  "description": "*Doom music starts playing*",
+  "homepage": "",
+  "countryCodes": ["nz"],
+  "platform": ".Net 6.0",
+  "programmingLang": "C# 10.0"
+}
