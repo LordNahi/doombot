@@ -5,15 +5,15 @@ using Robocode.TankRoyale.BotApi.Events;
 enum TankState
 {
     IDLE,
-    SEEKING_CENTER,
+    SEEKING_POSITION,
     EXTERMINATING
 }
 
 public class Doom : Bot
 {
     int enemyCount;
-    int centerX;
-    int centerY;
+    double targetX;
+    double targetY;
     int speed = 30;
     TankState state = TankState.IDLE;
 
@@ -33,10 +33,10 @@ public class Doom : Bot
             switch (state)
             {
                 case TankState.IDLE:
-                    state = TankState.SEEKING_CENTER;
+                    state = TankState.SEEKING_POSITION;
                     break;
-                case TankState.SEEKING_CENTER:
-                    SeekCenter();
+                case TankState.SEEKING_POSITION:
+                    SeekPosition();
                     break;
                 case TankState.EXTERMINATING:
                     Exterminate();
@@ -63,22 +63,22 @@ public class Doom : Bot
 
         enemyCount = EnemyCount;
 
-        centerX = ArenaWidth / 2;
-        centerY = ArenaHeight / 2;
+        targetX = ArenaWidth / 2;
+        targetY = ArenaHeight / 2;
     }
 
-    private void SeekCenter()
+    private void SeekPosition()
     {
-        var cx = centerX - X;
-        var cy = centerY - Y;
+        var tx = targetX - X;
+        var ty = targetY - Y;
 
         TurnLeft(-Direction);
 
-        double angleToCenter = Math.Atan2(centerY - Y, centerX - X) * 180 / Math.PI;
+        double angleToCenter = Math.Atan2(targetY - Y, targetX - X) * 180 / Math.PI;
 
         TurnLeft(angleToCenter);
 
-        double distanceToCenter = Math.Sqrt(Math.Pow(centerX - X, 2) + Math.Pow(centerY - Y, 2));
+        double distanceToCenter = Math.Sqrt(Math.Pow(targetX - X, 2) + Math.Pow(targetY - Y, 2));
 
         Forward(distanceToCenter);
 
@@ -90,12 +90,29 @@ public class Doom : Bot
         TurnRight(10);
     }
 
+    private void ChangePosition()
+    {
+        if (state == TankState.SEEKING_POSITION) return;
+
+        Random random = new Random();
+
+        targetX = ArenaWidth * random.NextDouble();
+        targetY = ArenaHeight * random.NextDouble();
+
+        state = TankState.SEEKING_POSITION;
+    }
+
     public override void OnScannedBot(ScannedBotEvent e)
     {
         if (state == TankState.EXTERMINATING)
         {
             Fire(3);
         }
+    }
+
+    public override void OnHitByBullet(HitByBulletEvent e)
+    {
+        ChangePosition();
     }
 
     public override void OnDeath(DeathEvent e)
