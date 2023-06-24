@@ -74,13 +74,13 @@ public class Doom : Bot
 
         TurnLeft(-Direction);
 
-        double angleToCenter = Math.Atan2(targetY - Y, targetX - X) * 180 / Math.PI;
+        double angleToPosition = Math.Atan2(ty, tx) * 180 / Math.PI;
 
-        TurnLeft(angleToCenter);
+        TurnLeft(angleToPosition);
 
-        double distanceToCenter = Math.Sqrt(Math.Pow(targetX - X, 2) + Math.Pow(targetY - Y, 2));
+        double distanceToPosition = Math.Sqrt(Math.Pow(tx, 2) + Math.Pow(ty, 2));
 
-        Forward(distanceToCenter);
+        Forward(distanceToPosition);
 
         state = TankState.EXTERMINATING;
     }
