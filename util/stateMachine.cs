@@ -24,7 +24,7 @@ namespace Utils
 
         public void SetState(T state)
         {
-            if (!states.ContainsKey(stateActive)) return;
+            if (!states.ContainsKey(state)) return;
 
             stateActive = state;
         }

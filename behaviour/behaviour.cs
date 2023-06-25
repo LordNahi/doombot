@@ -10,12 +10,10 @@ abstract class Behaviour
     public Behaviour(Bot control)
     {
         bot = control;
-
-        Create();
     }
 
-    public virtual void Create() { }
     public virtual void Update() { }
+    public virtual void Create(GameStartedEvent e) { }
     public virtual void Hit(HitByBulletEvent e) { }
     public virtual void ScanBot(ScannedBotEvent e) { }
     public virtual void Killed(DeathEvent e) { }

@@ -13,12 +13,13 @@ enum HitMoveState
 class HitMove : Behaviour
 {
     public StateMachine<HitMoveState> sm = new StateMachine<HitMoveState>();
+
     private double targetX;
     private double targetY;
 
     public HitMove(Bot bot) : base(bot) { }
 
-    public override void Create()
+    public override void Create(GameStartedEvent e)
     {
         sm.AddState(HitMoveState.IDLE, () => { sm.SetState(HitMoveState.MOVING); });
         sm.AddState(HitMoveState.MOVING, SeekPosition);
