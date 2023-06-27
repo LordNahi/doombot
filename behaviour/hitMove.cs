@@ -1,7 +1,6 @@
 using System;
 using Robocode.TankRoyale.BotApi;
 using Robocode.TankRoyale.BotApi.Events;
-using Utils;
 
 enum HitMoveState
 {
@@ -12,29 +11,39 @@ enum HitMoveState
 
 class HitMove : Behaviour
 {
-    public StateMachine<HitMoveState> sm = new StateMachine<HitMoveState>();
-
+    private HitMoveState state;
     private double targetX;
     private double targetY;
+    private int painTolerance = 4;
+    private int pain = 0;
 
     public HitMove(Bot bot) : base(bot) { }
 
-    public override void Create(GameStartedEvent e)
-    {
-        sm.AddState(HitMoveState.IDLE, () => { sm.SetState(HitMoveState.MOVING); });
-        sm.AddState(HitMoveState.MOVING, SeekPosition);
-        sm.AddState(HitMoveState.HALTED, Spin);
-
-        sm.SetState(HitMoveState.IDLE);
-    }
-
     public override void Update()
     {
-        sm.Update();
+        switch (state)
+        {
+            case HitMoveState.IDLE:
+                state = HitMoveState.MOVING;
+                break;
+            case HitMoveState.MOVING:
+                SeekPosition();
+                break;
+            default:
+                state = HitMoveState.IDLE;
+                break;
+        }
     }
 
     public override void Hit(HitByBulletEvent e)
     {
+        pain++;
+
+        if (state != HitMoveState.HALTED) return;
+        if (pain < painTolerance) return;
+
+        pain = 0;
+
         ChangePosition();
     }
 
@@ -53,23 +62,18 @@ class HitMove : Behaviour
 
         bot.Forward(distanceToPosition);
 
-        sm.SetState(HitMoveState.HALTED);
-    }
-
-    private void Spin()
-    {
-        bot.TurnRight(10);
+        state = HitMoveState.HALTED;
     }
 
     private void ChangePosition()
     {
-        if (sm.IsActiveState(HitMoveState.MOVING)) return;
+        if (state == HitMoveState.MOVING) return;
 
         Random random = new Random();
 
         targetX = bot.ArenaWidth * random.NextDouble();
         targetY = bot.ArenaHeight * random.NextDouble();
 
-        sm.SetState(HitMoveState.MOVING);
+        state = HitMoveState.MOVING;
     }
 }

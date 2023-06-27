@@ -1,6 +1,7 @@
 using System;
 using Robocode.TankRoyale.BotApi;
 using Robocode.TankRoyale.BotApi.Events;
+using System.Collections.Generic;
 
 enum TankState
 {
@@ -11,6 +12,7 @@ enum TankState
 
 public class Doom : Bot
 {
+    List<Behaviour> behaviours = new List<Behaviour>();
     int enemyCount;
     double targetX;
     double targetY;
@@ -30,20 +32,9 @@ public class Doom : Bot
 
         while (IsRunning)
         {
-            switch (state)
+            foreach (Behaviour behaviour in behaviours)
             {
-                case TankState.IDLE:
-                    state = TankState.SEEKING_POSITION;
-                    break;
-                case TankState.SEEKING_POSITION:
-                    SeekPosition();
-                    break;
-                case TankState.EXTERMINATING:
-                    Exterminate();
-                    break;
-                default:
-                    state = TankState.IDLE;
-                    break;
+                behaviour.Update();
             }
         }
     }
@@ -54,6 +45,7 @@ public class Doom : Bot
 
         AdjustGunForBodyTurn = false;
         AdjustRadarForGunTurn = false;
+        AdjustRadarForBodyTurn = false;
 
         BulletColor = Color.Yellow;
         BodyColor = Color.Green;
@@ -65,58 +57,42 @@ public class Doom : Bot
 
         targetX = ArenaWidth / 2;
         targetY = ArenaHeight / 2;
+
+        // Define behaviours ...
+
+        behaviours.Add(new HitMove(this));
+        behaviours.Add(new ScanTrack(this));
     }
 
-    private void SeekPosition()
+    public override void OnGameStarted(GameStartedEvent e)
     {
-        var tx = targetX - X;
-        var ty = targetY - Y;
-
-        TurnLeft(-Direction);
-
-        double angleToPosition = Math.Atan2(ty, tx) * 180 / Math.PI;
-
-        TurnLeft(angleToPosition);
-
-        double distanceToPosition = Math.Sqrt(Math.Pow(tx, 2) + Math.Pow(ty, 2));
-
-        Forward(distanceToPosition);
-
-        state = TankState.EXTERMINATING;
-    }
-
-    private void Exterminate()
-    {
-        TurnRight(10);
-    }
-
-    private void ChangePosition()
-    {
-        if (state == TankState.SEEKING_POSITION) return;
-
-        Random random = new Random();
-
-        targetX = ArenaWidth * random.NextDouble();
-        targetY = ArenaHeight * random.NextDouble();
-
-        state = TankState.SEEKING_POSITION;
+        foreach (Behaviour behaviour in behaviours)
+        {
+            behaviour.Create(e);
+        }
     }
 
     public override void OnScannedBot(ScannedBotEvent e)
     {
-        if (state == TankState.EXTERMINATING)
+        foreach (Behaviour behaviour in behaviours)
         {
-            Fire(3);
+            behaviour.ScanBot(e);
         }
     }
 
     public override void OnHitByBullet(HitByBulletEvent e)
     {
-        ChangePosition();
+        foreach (Behaviour behaviour in behaviours)
+        {
+            behaviour.Hit(e);
+        }
     }
 
     public override void OnDeath(DeathEvent e)
     {
-        Console.WriteLine("No ragrets.");
+        foreach (Behaviour behaviour in behaviours)
+        {
+            behaviour.Killed(e);
+        }
     }
 }
